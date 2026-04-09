@@ -1,9 +1,8 @@
 const path = require('path');
 const express = require('express');
 const dotenv = require('dotenv');
-const { initDb, saveHistory, listHistory, checkDb } = require('./db');
-
 dotenv.config();
+const { initDb, saveHistory, listHistory, checkDb } = require('./db');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
