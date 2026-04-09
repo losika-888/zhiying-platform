@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智影文创 · 智能营销内容平台</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --paper: #f5f0e8;
+    --paper2: #ede7d8;
+    --gold: #c8a84b;
+    --gold2: #e8c96a;
+    --red: #c0392b;
+    --muted: #7a7060;
+    --border: #d4c9b0;
+    --white: #ffffff;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* 背景纹理 */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,0,0,0.03) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,0,0,0.02) 40px);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* 顶部装饰条 */
+  .topbar {
+    height: 4px;
+    background: linear-gradient(90deg, var(--red), var(--gold), var(--gold2), var(--gold));
+  }
+
+  header {
+    position: relative; z-index: 1;
+    padding: 32px 48px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .logo-seal {
+    width: 52px; height: 52px;
+    background: var(--red);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    transform: rotate(-3deg);
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+    flex-shrink: 0;
+  }
+  .logo-seal span {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 20px; font-weight: 700;
+    color: white; letter-spacing: -1px;
+    transform: rotate(3deg); display: block;
+  }
+  .logo-text h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 24px; font-weight: 700;
+    color: var(--ink); letter-spacing: 2px;
+  }
+  .logo-text p {
+    font-size: 11px; color: var(--muted);
+    letter-spacing: 3px; margin-top: 2px;
+  }
+  .header-badge {
+    display: flex; gap: 8px;
+  }
+  .badge {
+    padding: 4px 10px;
+    background: var(--paper2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 11px; color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .badge.active { background: var(--gold); color: var(--ink); border-color: var(--gold); font-weight: 500; }
+
+  main {
+    position: relative; z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .hero-tag {
+    display: inline-block;
+    padding: 4px 16px;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-size: 11px; letter-spacing: 4px;
+    margin-bottom: 20px;
+    border-radius: 2px;
+  }
+  .hero h2 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 36px; font-weight: 700;
+    line-height: 1.4; color: var(--ink);
+    margin-bottom: 12px;
+  }
+  .hero h2 em {
+    font-style: normal; color: var(--red);
+  }
+  .hero p {
+    color: var(--muted); font-size: 14px;
+    letter-spacing: 1px; line-height: 1.8;
+  }
+
+  /* 主卡片 */
+  .card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+  }
+
+  /* 模式选择 */
+  .mode-label {
+    font-size: 11px; letter-spacing: 3px;
+    color: var(--muted); margin-bottom: 14px;
+    font-weight: 500;
+  }
+  .mode-tabs {
+    display: flex; gap: 10px;
+    margin-bottom: 28px;
+  }
+  .mode-tab {
+    flex: 1;
+    padding: 14px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--paper);
+    cursor: pointer;
+    text-align: center;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .mode-tab:hover { border-color: var(--gold); background: #fdf8ee; }
+  .mode-tab.selected {
+    border-color: var(--gold);
+    background: linear-gradient(135deg, #fffbf0, #fdf3d0);
+    box-shadow: 0 2px 12px rgba(200,168,75,0.2);
+  }
+  .mode-tab.selected::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px; background: var(--gold);
+    border-radius: 10px 10px 0 0;
+  }
+  .mode-tab .tab-icon {
+    font-size: 26px; margin-bottom: 8px; display: block;
+    line-height: 1;
+  }
+  .mode-tab .tab-name {
+    font-size: 13px; font-weight: 500;
+    color: var(--ink); display: block;
+    margin-bottom: 3px;
+  }
+  .mode-tab .tab-desc {
+    font-size: 11px; color: var(--muted);
+  }
+
+  /* 输入区 */
+  .input-section { margin-bottom: 20px; }
+  .input-label {
+    font-size: 11px; letter-spacing: 3px;
+    color: var(--muted); margin-bottom: 10px;
+    font-weight: 500;
+  }
+  textarea {
+    width: 100%;
+    padding: 16px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--paper);
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 14px; color: var(--ink);
+    line-height: 1.8; resize: vertical;
+    min-height: 110px;
+    transition: border-color .2s;
+    outline: none;
+  }
+  textarea:focus { border-color: var(--gold); background: #fffcf4; }
+  textarea::placeholder { color: #b0a890; }
+
+  /* 选项行 */
+  .options-row {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .option-chip {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px; color: var(--muted);
+    cursor: pointer; transition: all .15s;
+    background: var(--paper);
+  }
+  .option-chip:hover, .option-chip.active {
+    border-color: var(--gold); color: #8a6a10;
+    background: #fdf8ee;
+  }
+
+  /* 生成按钮 */
+  .generate-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--ink);
+    color: white;
+    border: none; border-radius: 10px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px; font-weight: 600;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .generate-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(200,168,75,0.15));
+    pointer-events: none;
+  }
+  .generate-btn:hover { background: #222; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+  .generate-btn:active { transform: translateY(0); }
+  .generate-btn:disabled { background: #999; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* loading动画 */
+  .loading-bar {
+    display: none;
+    height: 3px;
+    background: var(--paper2);
+    border-radius: 3px;
+    margin: 16px 0;
+    overflow: hidden;
+  }
+  .loading-bar.show { display: block; }
+  .loading-bar::after {
+    content: '';
+    display: block; height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--red), var(--gold));
+    background-size: 200%;
+    animation: loading 1.4s ease infinite;
+  }
+  @keyframes loading {
+    0% { background-position: 200% 0; width: 30%; margin-left: 0; }
+    50% { background-position: 0% 0; width: 60%; margin-left: 20%; }
+    100% { background-position: -200% 0; width: 30%; margin-left: 100%; }
+  }
+
+  .loading-text {
+    text-align: center; font-size: 12px;
+    color: var(--muted); letter-spacing: 2px;
+    margin-bottom: 16px; display: none;
+  }
+  .loading-text.show { display: block; }
+
+  /* 结果区 */
+  .result-section {
+    display: none;
+    margin-top: 28px;
+    animation: fadeUp .4s ease;
+  }
+  .result-section.show { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .result-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .result-title {
+    font-size: 11px; letter-spacing: 3px;
+    color: var(--muted); font-weight: 500;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .result-title::before {
+    content: ''; display: inline-block;
+    width: 20px; height: 1px; background: var(--gold);
+  }
+  .result-actions { display: flex; gap: 8px; }
+  .action-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: white;
+    font-size: 12px; color: var(--muted);
+    cursor: pointer; transition: all .15s;
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+  .action-btn:hover { border-color: var(--gold); color: var(--ink); }
+  .action-btn.primary {
+    background: var(--gold); color: var(--ink);
+    border-color: var(--gold); font-weight: 500;
+  }
+  .action-btn.primary:hover { background: var(--gold2); }
+
+  /* 文案结果 */
+  .text-result {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 28px;
+    font-size: 14px; line-height: 2;
+    color: var(--ink); white-space: pre-wrap;
+    font-family: 'Noto Serif SC', serif;
+    min-height: 120px;
+  }
+
+  /* 图片结果 */
+  .image-result {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--paper2);
+    min-height: 300px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .image-result img {
+    width: 100%; display: block;
+    border-radius: 10px;
+  }
+
+  /* 视频结果 */
+  .video-result {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #111;
+    min-height: 280px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .video-result video {
+    width: 100%; display: block;
+  }
+
+  /* 错误提示 */
+  .error-box {
+    background: #fff5f5;
+    border: 1px solid #fcc;
+    border-radius: 10px;
+    padding: 16px 20px;
+    font-size: 13px; color: var(--red);
+    display: none;
+  }
+  .error-box.show { display: block; }
+
+  /* 历史记录 */
+  .history-section {
+    margin-top: 40px;
+  }
+  .section-divider {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 20px;
+  }
+  .section-divider span {
+    font-size: 11px; letter-spacing: 3px; color: var(--muted);
+    white-space: nowrap;
+  }
+  .section-divider::before, .section-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .history-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+  .history-item {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+  }
+  .history-item:hover { border-color: var(--gold); box-shadow: 0 2px 12px rgba(200,168,75,0.15); }
+  .history-item .h-type {
+    font-size: 10px; letter-spacing: 2px; color: var(--gold);
+    margin-bottom: 8px; font-weight: 500;
+  }
+  .history-item .h-prompt {
+    font-size: 12px; color: var(--muted); line-height: 1.6;
+    overflow: hidden; display: -webkit-box;
+    -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .history-item .h-time {
+    font-size: 10px; color: #ccc; margin-top: 10px;
+  }
+
+  footer {
+    position: relative; z-index: 1;
+    text-align: center; padding: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  /* 装饰纹样 */
+  .deco {
+    position: fixed;
+    pointer-events: none; z-index: 0;
+    opacity: 0.04;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 200px; font-weight: 700;
+    color: var(--ink); user-select: none;
+  }
+  .deco-1 { bottom: -40px; right: -20px; }
+  .deco-2 { top: 80px; left: -30px; font-size: 160px; }
+</style>
+</head>
+<body>
+<div class="deco deco-1">创</div>
+<div class="deco deco-2">影</div>
+
+<div class="topbar"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-seal"><span>智</span></div>
+    <div class="logo-text">
+      <h1>智影文创</h1>
+      <p>ZHIYING · AI MARKETING PLATFORM</p>
+    </div>
+  </div>
+  <div class="header-badge">
+    <span class="badge active">Multi-Agent</span>
+    <span class="badge">v2.0</span>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="hero-tag">智能营销内容自动化生成</div>
+    <h2>一键生成 <em>营销内容</em><br>文案 · 图片 · 视频</h2>
+    <p>基于多Agent协作架构 · 输入创意描述 · 秒级生成专业营销物料</p>
+  </div>
+
+  <div class="card">
+    <div class="mode-label">选择创作模式</div>
+    <div class="mode-tabs">
+      <div class="mode-tab selected" data-mode="text" onclick="selectMode('text', this)">
+        <span class="tab-icon">✍️</span>
+        <span class="tab-name">营销文案</span>
+        <span class="tab-desc">广告语 · 产品描述 · 推广文</span>
+      </div>
+      <div class="mode-tab" data-mode="image" onclick="selectMode('image', this)">
+        <span class="tab-icon">🎨</span>
+        <span class="tab-name">营销图片</span>
+        <span class="tab-desc">海报 · 产品图 · Banner</span>
+      </div>
+      <div class="mode-tab" data-mode="video" onclick="selectMode('video', this)">
+        <span class="tab-icon">🎬</span>
+        <span class="tab-name">营销视频</span>
+        <span class="tab-desc">短视频 · 广告片 · 宣传片</span>
+      </div>
+    </div>
+
+    <div class="input-section">
+      <div class="input-label">输入创作描述</div>
+      <textarea id="promptInput" placeholder="例：为一款高端护肤品创作五一节日促销文案，目标用户为25-35岁女性，强调天然成分和限时折扣..." rows="4"></textarea>
+    </div>
+
+    <div class="options-row" id="optionsRow">
+      <!-- 动态生成 -->
+    </div>
+
+    <button class="generate-btn" id="generateBtn" onclick="generate()">
+      ⬡ &nbsp;开始智能创作
+    </button>
+
+    <div class="loading-bar" id="loadingBar"></div>
+    <div class="loading-text" id="loadingText">Agent 正在思考中，请稍候...</div>
+    <div class="error-box" id="errorBox"></div>
+
+    <div class="result-section" id="resultSection">
+      <div class="result-header">
+        <div class="result-title">生成结果</div>
+        <div class="result-actions">
+          <button class="action-btn" onclick="regenerate()">重新生成</button>
+          <button class="action-btn primary" id="downloadBtn" onclick="downloadResult()">下载</button>
+        </div>
+      </div>
+      <div id="resultContent"></div>
+    </div>
+  </div>
+
+  <div class="history-section" id="historySection" style="display:none">
+    <div class="section-divider"><span>创作历史</span></div>
+    <div class="history-grid" id="historyGrid"></div>
+  </div>
+</main>
+
+<footer>智影文创 · 多Agent智能营销平台 · 版权所有</footer>
+
+<script>
+const API_BASE = '/api';
+
+let currentMode = 'text';
+let lastResult = null;
+let history = [];
+const modeLabelMap = { text: '文案', image: '图片', video: '视频' };
+
+const modeOptions = {
+  text: ['广告语', '产品描述', '社媒推广', '节日促销', '品牌故事', '电商详情页'],
+  image: ['产品海报', '节日Banner', '社媒封面', '电商主图', '品牌宣传'],
+  video: ['15秒短视频', '30秒广告', '产品展示', '品牌宣传片']
+};
+
+const modePlaceholders = {
+  text: '例：为一款高端护肤品创作五一节日促销文案，目标用户为25-35岁女性，强调天然成分和限时折扣...',
+  image: '例：生成一张简洁现代风格的咖啡产品海报，主色调深棕与米白，突出质感与温暖氛围...',
+  video: '例：制作一段30秒的新能源汽车宣传视频，展示城市穿行场景，科技感强烈，背景音乐节奏感强...'
+};
+
+function selectMode(mode, el) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('promptInput').placeholder = modePlaceholders[mode];
+  renderOptions();
+  hideResult();
+}
+
+function renderOptions() {
+  const row = document.getElementById('optionsRow');
+  row.innerHTML = modeOptions[currentMode].map(o =>
+    `<span class="option-chip" onclick="toggleChip(this)">${o}</span>`
+  ).join('');
+}
+
+function toggleChip(el) {
+  el.classList.toggle('active');
+}
+
+function getActiveChips() {
+  return [...document.querySelectorAll('.option-chip.active')].map(c => c.textContent).join('、');
+}
+
+function hideResult() {
+  document.getElementById('resultSection').classList.remove('show');
+  document.getElementById('errorBox').classList.remove('show');
+}
+
+function showLoading(msg) {
+  document.getElementById('loadingBar').classList.add('show');
+  document.getElementById('loadingText').textContent = msg;
+  document.getElementById('loadingText').classList.add('show');
+  document.getElementById('generateBtn').disabled = true;
+  hideResult();
+}
+
+function hideLoading() {
+  document.getElementById('loadingBar').classList.remove('show');
+  document.getElementById('loadingText').classList.remove('show');
+  document.getElementById('generateBtn').disabled = false;
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  box.textContent = '⚠️ ' + msg;
+  box.classList.add('show');
+  hideLoading();
+}
+
+async function apiRequest(path, payload) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: payload ? 'POST' : 'GET',
+    headers: payload ? { 'Content-Type': 'application/json' } : undefined,
+    body: payload ? JSON.stringify(payload) : undefined
+  });
+
+  let data = null;
+  try {
+    data = await res.json();
+  } catch (e) {
+    throw new Error(`服务返回格式异常（HTTP ${res.status}）`);
+  }
+  if (!res.ok || !data.ok) {
+    throw new Error(data?.error || `请求失败（HTTP ${res.status}）`);
+  }
+  return data.data;
+}
+
+async function generate() {
+  const prompt = document.getElementById('promptInput').value.trim();
+  if (!prompt) { alert('请先输入创作描述'); return; }
+
+  const chips = getActiveChips();
+  const fullPrompt = chips ? `${prompt}（风格偏向：${chips}）` : prompt;
+
+  if (currentMode === 'text') await generateText(fullPrompt);
+  else if (currentMode === 'image') await generateImage(fullPrompt);
+  else await generateVideo(fullPrompt);
+}
+
+async function generateText(prompt) {
+  showLoading('文案 Agent 正在创作中...');
+  try {
+    const data = await apiRequest('/generate/text', { prompt });
+    const text = data.content;
+    lastResult = { type: 'text', content: text, prompt };
+    showTextResult(text);
+    addHistoryFromServer(data);
+  } catch (e) {
+    showError('文案生成失败：' + e.message);
+  }
+}
+
+async function generateImage(prompt) {
+  showLoading('图片 Agent 正在绘制中，预计需要 15-30 秒...');
+  try {
+    const data = await apiRequest('/generate/image', { prompt });
+    const dataUrl = data.content;
+    lastResult = { type: 'image', content: dataUrl, prompt };
+    showImageResult(dataUrl);
+    addHistoryFromServer(data);
+  } catch (e) {
+    showError('图片生成失败：' + e.message + '。建议改用文案模式。');
+  }
+}
+
+async function generateVideo(prompt) {
+  showLoading('视频 Agent 正在生成中，可能需要 1-3 分钟...');
+  try {
+    const data = await apiRequest('/generate/video', { prompt });
+    lastResult = { type: 'video', content: data.content, prompt };
+    showVideoResult(data.content);
+    addHistoryFromServer(data);
+  } catch (e) {
+    showError('视频生成失败：' + e.message);
+  }
+}
+
+function showTextResult(text) {
+  hideLoading();
+  const el = document.getElementById('resultContent');
+  el.innerHTML = `<div class="text-result">${escapeHtml(text)}</div>`;
+  document.getElementById('resultSection').classList.add('show');
+}
+
+function showImageResult(dataUrl) {
+  hideLoading();
+  const el = document.getElementById('resultContent');
+  el.innerHTML = `<div class="image-result"><img src="${dataUrl}" alt="生成图片" id="resultImg"/></div>`;
+  document.getElementById('resultSection').classList.add('show');
+}
+
+function showVideoResult(url) {
+  hideLoading();
+  const el = document.getElementById('resultContent');
+  if (url.startsWith('http')) {
+    el.innerHTML = `<div class="video-result"><video controls autoplay muted src="${url}"></video></div>`;
+  } else {
+    el.innerHTML = `<div class="video-result"><video controls src="${url}"></video></div>`;
+  }
+  document.getElementById('resultSection').classList.add('show');
+}
+
+function downloadResult() {
+  if (!lastResult) return;
+  if (lastResult.type === 'text') {
+    const blob = new Blob([lastResult.content], { type: 'text/plain;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = '营销文案_' + Date.now() + '.txt'; a.click();
+  } else if (lastResult.type === 'image') {
+    const a = document.createElement('a'); a.href = lastResult.content;
+    a.download = '营销图片_' + Date.now() + '.jpg'; a.click();
+  } else if (lastResult.type === 'video') {
+    if (lastResult.content.startsWith('http')) {
+      window.open(lastResult.content, '_blank');
+    } else {
+      const a = document.createElement('a'); a.href = lastResult.content;
+      a.download = '营销视频_' + Date.now() + '.mp4'; a.click();
+    }
+  }
+}
+
+function regenerate() {
+  const prompt = document.getElementById('promptInput').value.trim();
+  if (prompt) generate();
+}
+
+function addHistoryFromServer(item) {
+  const type = modeLabelMap[item.mode] || item.mode || '创作';
+  const time = item.createdAt ? new Date(item.createdAt).toLocaleTimeString() : new Date().toLocaleTimeString();
+  history.unshift({ type, prompt: item.prompt, time });
+  if (history.length > 8) history.pop();
+  renderHistory();
+}
+
+async function loadHistory() {
+  try {
+    const list = await apiRequest('/history?limit=8');
+    history = list.map(item => ({
+      type: modeLabelMap[item.mode] || item.mode || '创作',
+      prompt: item.prompt,
+      time: new Date(item.createdAt).toLocaleTimeString()
+    }));
+    renderHistory();
+  } catch (e) {
+    // 历史记录加载失败不影响主流程
+  }
+}
+
+function renderHistory() {
+  const sec = document.getElementById('historySection');
+  const grid = document.getElementById('historyGrid');
+  if (!history.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  grid.innerHTML = history.map((h, i) => `
+    <div class="history-item" onclick="reloadHistory(${i})">
+      <div class="h-type">${h.type}</div>
+      <div class="h-prompt">${escapeHtml(h.prompt)}</div>
+      <div class="h-time">${h.time}</div>
+    </div>
+  `).join('');
+}
+
+function reloadHistory(i) {
+  document.getElementById('promptInput').value = history[i].prompt;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+// 初始化
+renderOptions();
+loadHistory();
+</script>
+</body>
+</html>

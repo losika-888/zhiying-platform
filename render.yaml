@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: zhiying-platform
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL_MODE
+        value: require
+      - key: YUNWU_API_KEY
+        sync: false
+      - key: YUNWU_BASE_URL
+        value: https://yunwu.ai/v1
+      - key: TEXT_MODEL
+        value: gpt-4o-mini
+      - key: IMAGE_MODEL
+        value: gemini-3.1-flash-image-preview
+      - key: ARK_API_KEY
+        sync: false
+      - key: ARK_BASE_URL
+        value: https://ark.cn-beijing.volces.com/api/v3
+      - key: ARK_MODEL
+        value: doubao-seedance-1-0-pro-fast-251015
+      - key: VIDEO_POLL_INTERVAL_MS
+        value: 5000
+      - key: VIDEO_POLL_MAX_ROUNDS
+        value: 60
