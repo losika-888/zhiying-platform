@@ -75,24 +75,46 @@ function extractTextContent(data) {
   return data?.choices?.[0]?.message?.content;
 }
 
-function extractImageDataUrl(content) {
-  let b64 = null;
+function extractImageResult(content) {
+  let httpUrl = null;
+  let dataUrl = null;
 
-  if (typeof content === 'string' && content.includes('base64,')) {
-    b64 = content.split('base64,')[1].replace(/[^A-Za-z0-9+/=]/g, '');
+  if (typeof content === 'string') {
+    if (content.startsWith('http://') || content.startsWith('https://')) {
+      httpUrl = content;
+    } else if (content.includes('base64,')) {
+      const b64 = content.split('base64,')[1].replace(/[^A-Za-z0-9+/=]/g, '');
+      dataUrl = `data:image/jpeg;base64,${b64}`;
+    }
   } else if (Array.isArray(content)) {
     for (const part of content) {
-      if (part?.type === 'image_url' && part?.image_url?.url?.includes('base64,')) {
-        b64 = part.image_url.url.split('base64,')[1].replace(/[^A-Za-z0-9+/=]/g, '');
+      const maybeUrl = part?.image_url?.url;
+      if (!maybeUrl || typeof maybeUrl !== 'string') continue;
+      if (maybeUrl.startsWith('http://') || maybeUrl.startsWith('https://')) {
+        httpUrl = maybeUrl;
         break;
+      }
+      if (maybeUrl.includes('base64,')) {
+        const b64 = maybeUrl.split('base64,')[1].replace(/[^A-Za-z0-9+/=]/g, '');
+        dataUrl = `data:image/jpeg;base64,${b64}`;
       }
     }
   }
 
-  if (!b64) {
-    throw new Error('未从上游响应中解析到图片内容');
+  if (httpUrl) {
+    return {
+      content: httpUrl,
+      storageUrl: httpUrl
+    };
   }
-  return `data:image/jpeg;base64,${b64}`;
+  if (dataUrl) {
+    return {
+      content: dataUrl,
+      storageUrl: null
+    };
+  }
+
+  throw new Error('未从上游响应中解析到图片内容');
 }
 
 async function sleep(ms) {
@@ -186,20 +208,20 @@ app.post('/api/generate/image', async (req, res, next) => {
     });
 
     const content = data?.choices?.[0]?.message?.content;
-    const imageDataUrl = extractImageDataUrl(content);
+    const imageResult = extractImageResult(content);
 
     const row = await saveHistory({
       mode: 'image',
       prompt,
       resultType: 'image',
-      resultPreview: '[base64-image]'
+      resultPreview: imageResult.storageUrl || '[no-image-url-returned]'
     });
 
     res.json({
       ok: true,
       data: {
         ...row,
-        content: imageDataUrl
+        content: imageResult.content
       }
     });
   } catch (err) {
