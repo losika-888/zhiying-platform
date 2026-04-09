@@ -3,6 +3,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 dotenv.config();
 const { initDb, saveHistory, listHistory, checkDb } = require('./db');
+const { uploadImageDataUrl } = require('./objectStorage');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -103,14 +104,14 @@ function extractImageResult(content) {
 
   if (httpUrl) {
     return {
-      content: httpUrl,
-      storageUrl: httpUrl
+      remoteUrl: httpUrl,
+      dataUrl: null
     };
   }
   if (dataUrl) {
     return {
-      content: dataUrl,
-      storageUrl: null
+      remoteUrl: null,
+      dataUrl
     };
   }
 
@@ -209,19 +210,20 @@ app.post('/api/generate/image', async (req, res, next) => {
 
     const content = data?.choices?.[0]?.message?.content;
     const imageResult = extractImageResult(content);
+    const finalImageUrl = imageResult.remoteUrl || (await uploadImageDataUrl(imageResult.dataUrl));
 
     const row = await saveHistory({
       mode: 'image',
       prompt,
       resultType: 'image',
-      resultPreview: imageResult.storageUrl || '[no-image-url-returned]'
+      resultPreview: finalImageUrl
     });
 
     res.json({
       ok: true,
       data: {
         ...row,
-        content: imageResult.content
+        content: finalImageUrl
       }
     });
   } catch (err) {

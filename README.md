@@ -12,6 +12,7 @@
 npm install
 cp .env.example .env
 # 编辑 .env，填入真实 DATABASE_URL / YUNWU_API_KEY / ARK_API_KEY
+# 若希望图片历史始终存 URL，请同时配置 OBJECT_STORAGE_* 变量
 npm start
 ```
 
@@ -54,6 +55,11 @@ git push -u origin main
    - `DATABASE_URL`（Neon 连接串）
    - `YUNWU_API_KEY`
    - `ARK_API_KEY`
+   - `OBJECT_STORAGE_BUCKET`
+   - `OBJECT_STORAGE_ENDPOINT`
+   - `OBJECT_STORAGE_ACCESS_KEY_ID`
+   - `OBJECT_STORAGE_SECRET_ACCESS_KEY`
+   - `OBJECT_STORAGE_PUBLIC_BASE_URL`（可选，推荐）
 5. 点击 Deploy。
 
 方式 B：
@@ -68,5 +74,5 @@ git push -u origin main
 ## 6. 注意事项
 
 - 旧版前端中的明文密钥已移除，不会暴露在浏览器端。
-- 图片是以 `base64 data URL` 返回，体积较大时可能影响加载速度。
+- 图片接口会优先使用上游 URL；如果上游仅返回 base64，会上传到你配置的对象存储后再返回 URL。
 - 视频生成接口可能耗时 1-3 分钟，后端会轮询等待结果。
