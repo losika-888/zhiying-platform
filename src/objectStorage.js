@@ -108,7 +108,8 @@ async function uploadImageDataUrl(dataUrl) {
     ContentType: contentType
   };
 
-  if (uploadAcl) {
+  // Signed URL mode is intended for private buckets, so we avoid setting object ACL.
+  if (uploadAcl && urlMode !== 'signed') {
     putParams.ACL = uploadAcl;
   }
 
