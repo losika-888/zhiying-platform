@@ -43,6 +43,8 @@ services:
         value: generated-images
       - key: OBJECT_STORAGE_FORCE_PATH_STYLE
         value: "true"
+      - key: OBJECT_STORAGE_UPLOAD_ACL
+        value: ""
       - key: VIDEO_POLL_INTERVAL_MS
         value: 5000
       - key: VIDEO_POLL_MAX_ROUNDS

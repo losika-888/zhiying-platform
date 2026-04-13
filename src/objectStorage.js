@@ -9,6 +9,7 @@ const secretAccessKey = process.env.OBJECT_STORAGE_SECRET_ACCESS_KEY;
 const publicBaseUrl = process.env.OBJECT_STORAGE_PUBLIC_BASE_URL;
 const keyPrefix = process.env.OBJECT_STORAGE_PREFIX || 'generated-images';
 const forcePathStyle = String(process.env.OBJECT_STORAGE_FORCE_PATH_STYLE || 'true').toLowerCase() === 'true';
+const uploadAcl = (process.env.OBJECT_STORAGE_UPLOAD_ACL || '').trim();
 
 function isConfigured() {
   return Boolean(bucket && endpoint && accessKeyId && secretAccessKey);
@@ -79,14 +80,18 @@ async function uploadImageDataUrl(dataUrl) {
   const { contentType, buffer } = parseDataUrl(dataUrl);
   const key = createObjectKey(contentType);
 
-  await client.send(
-    new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: buffer,
-      ContentType: contentType
-    })
-  );
+  const putParams = {
+    Bucket: bucket,
+    Key: key,
+    Body: buffer,
+    ContentType: contentType
+  };
+
+  if (uploadAcl) {
+    putParams.ACL = uploadAcl;
+  }
+
+  await client.send(new PutObjectCommand(putParams));
 
   return toPublicUrl(key);
 }
