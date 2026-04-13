@@ -1,5 +1,6 @@
 const { randomUUID } = require('crypto');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 const bucket = process.env.OBJECT_STORAGE_BUCKET;
 const region = process.env.OBJECT_STORAGE_REGION || 'auto';
@@ -10,6 +11,8 @@ const publicBaseUrl = process.env.OBJECT_STORAGE_PUBLIC_BASE_URL;
 const keyPrefix = process.env.OBJECT_STORAGE_PREFIX || 'generated-images';
 const forcePathStyle = String(process.env.OBJECT_STORAGE_FORCE_PATH_STYLE || 'true').toLowerCase() === 'true';
 const uploadAcl = (process.env.OBJECT_STORAGE_UPLOAD_ACL || '').trim();
+const urlMode = (process.env.OBJECT_STORAGE_URL_MODE || 'public').trim().toLowerCase();
+const signedUrlExpiresSeconds = Number(process.env.OBJECT_STORAGE_SIGNED_URL_EXPIRES_SECONDS || 3600);
 
 function isConfigured() {
   return Boolean(bucket && endpoint && accessKeyId && secretAccessKey);
@@ -57,7 +60,7 @@ function createObjectKey(contentType) {
   return `${keyPrefix}/${date}/${randomUUID()}.${ext}`;
 }
 
-function toPublicUrl(key) {
+function toStorageUrl(key) {
   if (publicBaseUrl) {
     return `${publicBaseUrl.replace(/\/$/, '')}/${key}`;
   }
@@ -65,6 +68,24 @@ function toPublicUrl(key) {
     return `${endpoint.replace(/\/$/, '')}/${bucket}/${key}`;
   }
   return `https://${bucket}.s3.${region}.amazonaws.com/${key}`;
+}
+
+async function toAccessUrl(client, key) {
+  if (urlMode !== 'signed') {
+    return toStorageUrl(key);
+  }
+  const safeExpires = Number.isFinite(signedUrlExpiresSeconds)
+    ? Math.max(60, Math.min(signedUrlExpiresSeconds, 7 * 24 * 3600))
+    : 3600;
+
+  return getSignedUrl(
+    client,
+    new GetObjectCommand({
+      Bucket: bucket,
+      Key: key
+    }),
+    { expiresIn: safeExpires }
+  );
 }
 
 async function uploadImageDataUrl(dataUrl) {
@@ -93,7 +114,11 @@ async function uploadImageDataUrl(dataUrl) {
 
   await client.send(new PutObjectCommand(putParams));
 
-  return toPublicUrl(key);
+  return {
+    key,
+    storageUrl: toStorageUrl(key),
+    accessUrl: await toAccessUrl(client, key)
+  };
 }
 
 module.exports = {

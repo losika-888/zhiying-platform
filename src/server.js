@@ -210,13 +210,20 @@ app.post('/api/generate/image', async (req, res, next) => {
 
     const content = data?.choices?.[0]?.message?.content;
     const imageResult = extractImageResult(content);
-    const finalImageUrl = imageResult.remoteUrl || (await uploadImageDataUrl(imageResult.dataUrl));
+    let finalImageUrl = imageResult.remoteUrl;
+    let persistedImageUrl = imageResult.remoteUrl;
+
+    if (!imageResult.remoteUrl) {
+      const uploaded = await uploadImageDataUrl(imageResult.dataUrl);
+      finalImageUrl = uploaded.accessUrl;
+      persistedImageUrl = uploaded.storageUrl;
+    }
 
     const row = await saveHistory({
       mode: 'image',
       prompt,
       resultType: 'image',
-      resultPreview: finalImageUrl
+      resultPreview: persistedImageUrl
     });
 
     res.json({

@@ -76,4 +76,5 @@ git push -u origin main
 - 旧版前端中的明文密钥已移除，不会暴露在浏览器端。
 - 图片接口会优先使用上游 URL；如果上游仅返回 base64，会上传到你配置的对象存储后再返回 URL。
 - 对于阿里云 OSS，建议设置 `OBJECT_STORAGE_FORCE_PATH_STYLE=false` 和 `OBJECT_STORAGE_UPLOAD_ACL=public-read`。
+- 如果 OSS 仍受 ACL 限制，可设置 `OBJECT_STORAGE_URL_MODE=signed`，后端会返回可直接访问的签名 URL（默认 3600 秒过期）。
 - 视频生成接口可能耗时 1-3 分钟，后端会轮询等待结果。

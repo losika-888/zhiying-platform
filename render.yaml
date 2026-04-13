@@ -45,6 +45,10 @@ services:
         value: "true"
       - key: OBJECT_STORAGE_UPLOAD_ACL
         value: ""
+      - key: OBJECT_STORAGE_URL_MODE
+        value: public
+      - key: OBJECT_STORAGE_SIGNED_URL_EXPIRES_SECONDS
+        value: "3600"
       - key: VIDEO_POLL_INTERVAL_MS
         value: 5000
       - key: VIDEO_POLL_MAX_ROUNDS
