@@ -113,7 +113,24 @@ async function uploadImageDataUrl(dataUrl) {
     putParams.ACL = uploadAcl;
   }
 
-  await client.send(new PutObjectCommand(putParams));
+  try {
+    await client.send(new PutObjectCommand(putParams));
+  } catch (err) {
+    // Some OSS buckets reject object ACL on PutObject; retry once without ACL.
+    const message = String(err?.message || '');
+    const shouldRetryWithoutAcl = Boolean(putParams.ACL) && /bucket acl|accessdenied|forbidden/i.test(message);
+    if (!shouldRetryWithoutAcl) {
+      throw err;
+    }
+
+    const retryParams = {
+      Bucket: bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType
+    };
+    await client.send(new PutObjectCommand(retryParams));
+  }
 
   return {
     key,

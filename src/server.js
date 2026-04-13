@@ -214,7 +214,20 @@ app.post('/api/generate/image', async (req, res, next) => {
     let persistedImageUrl = imageResult.remoteUrl;
 
     if (!imageResult.remoteUrl) {
-      const uploaded = await uploadImageDataUrl(imageResult.dataUrl);
+      let uploaded;
+      try {
+        uploaded = await uploadImageDataUrl(imageResult.dataUrl);
+      } catch (uploadErr) {
+        const uploadMessage = String(uploadErr?.message || '');
+        if (/bucket acl|accessdenied|forbidden/i.test(uploadMessage)) {
+          const err = new Error(
+            `OSS 上传被拒绝（${uploadMessage}）。请确认：1) RAM 有 PutObject/GetObject 权限；2) OBJECT_STORAGE_URL_MODE=signed；3) OBJECT_STORAGE_UPLOAD_ACL 为空。`
+          );
+          err.status = 500;
+          throw err;
+        }
+        throw uploadErr;
+      }
       finalImageUrl = uploaded.accessUrl;
       persistedImageUrl = uploaded.storageUrl;
     }
